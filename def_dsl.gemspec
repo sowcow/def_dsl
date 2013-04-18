@@ -8,9 +8,9 @@ Gem::Specification.new do |spec|
   spec.version       = DefDsl::VERSION
   spec.authors       = ["Alexander K"]
   spec.email         = ["xpyro@ya.ru"]
-  spec.description   = %q{TODO: Write a gem description}
-  spec.summary       = %q{TODO: Write a gem summary}
-  spec.homepage      = ""
+  spec.description   = %q{ easy way to build dsl without using dsl... }.strip
+  spec.summary       = %q{ easy way to build dsl without using dsl... }.strip
+  spec.homepage      = "https://github.com/sowcow/def_dsl"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files`.split($/)
