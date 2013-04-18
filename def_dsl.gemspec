@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = DefDsl::VERSION
   spec.authors       = ["Alexander K"]
   spec.email         = ["xpyro@ya.ru"]
-  spec.description   = %q{ easy way to build dsl without using dsl... }.strip
-  spec.summary       = %q{ easy way to build dsl without using dsl... }.strip
+  spec.description   = %q{ easy way to build dsl without use of dsl... }.strip
+  spec.summary       = %q{ easy way to build dsl without use of dsl... }.strip
   spec.homepage      = "https://github.com/sowcow/def_dsl"
   spec.license       = "MIT"
 
