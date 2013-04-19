@@ -13,8 +13,10 @@ require "def_dsl/version"
 module DefDsl
 
 
-  def def_dsl const
-    define_dsl! self, [[const.name.to_s.underscore(self), const]]
+  def def_dsl *const
+    const.each do |const|
+      define_dsl! self, [[const.name.to_s.underscore(self), const]]
+    end
   end
   alias define_dsl def_dsl  
 
@@ -32,16 +34,18 @@ module DefDsl
       who.send :include, So
       define_dsl! const if const.is_a? Class
 
+      meth = const.instance_eval { @dsl } || mini
+
       who.class_eval do
-        define_method(mini) do |*a,&b|
-          so mini,*a,&b
+        define_method(meth) do |*a,&b|
+          so [mini,meth],*a,&b
         end
       end
 
       # const.send :include, So if const.is_a? Module # or even class
       # who.send :include, So if who.is_a? Module # or even class
       if who.class == Module
-        who.send :module_function, mini
+        who.send :module_function, meth
         who.send :module_function, :so
         who.send :module_function, :so1
         who.send :module_function, :so2
@@ -50,10 +54,18 @@ module DefDsl
   end 
 
   module So
+    def feed_block &block
+      instance_eval &block
+    end
+
     def so klass_name=nil,*a,&b
       return @so if klass_name.nil?
 
-      klass_name = klass_name.to_sym
+      klass_name, label = if klass_name.is_a? Array
+                            klass_name.map &:to_sym
+                          else
+                            [klass_name.to_sym, klass_name.to_sym]
+                          end
 
       if self.class == Module
         klass = self.const_get(klass_name.to_s.camelize)
@@ -62,8 +74,9 @@ module DefDsl
       end
 
       obj = klass.new(*a) #,&b)
-      obj.instance_eval &b if b
-      (@so ||= {}).tap { |h| h[klass_name] = h[klass_name] ? [h[klass_name], obj].flatten(1) : obj }
+      # obj.instance_eval &b if b
+      obj.feed_block &b if b
+      (@so ||= {}).tap { |h| h[label] = h[label] ? [h[label], obj].flatten(1) : obj }
     end
     def so1(name)
       value = @so[name]
