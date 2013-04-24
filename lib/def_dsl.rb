@@ -83,6 +83,7 @@ module DefDsl
       value.is_a?(Array) ? value.last : value
     end
     def so2(name)
+      return [] unless @so.key? name
       value = @so[name]
       value.is_a?(Array) ? value : [value]
     end    

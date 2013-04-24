@@ -11,8 +11,7 @@ describe [DefDsl,DefDSL].join' or ' do
       end
 
       extend DefDSL
-      def_dsl Dir
-      def_dsl File
+      def_dsl Dir, File
 
       file 'root.txt'
       dir 'dir' do
@@ -136,5 +135,64 @@ describe [DefDsl,DefDSL].join' or ' do
       so1(:file).instance_eval { @block }.nil?.should == false
     end
   end
+
+
+  example 'lazy evaluation' do
+    pending
+    class My
+      class File < Struct.new :name; end
+      class Dir < Struct.new :name
+        Dir = Dir
+        File = File
+      end
+
+      extend DefDSL
+      def_dsl Dir, File
+
+      def initialize &block
+        @block = block
+        # block ? instance_eval(&block) : raise
+
+        # so.should == {file: so1(:file), dir: so1(:dir)}
+
+        # so1(:file).name.should == 'root.txt'
+        # so1(:dir).name.should == 'dir'
+        # (inner = so1(:dir).send(:so1,:dir)).name.should == 'inner'
+        # inner.send(:so2,:dir).map(&:name).should == ['empty']
+        # inner.send(:so2,:file).map(&:name).should == ['any']        
+      end
+
+      def feed data
+        @so = nil
+        @data = data
+        instance_eval(&@block)
+      end
+    end
+
+    hook = nil
+
+    my = My.new do
+      file 'root.txt'
+      hook = @data
+
+      dir 'dir' do
+        raise 123
+        dir 'inner' do
+          dir 'empty'
+          file 'any'
+        end
+      end      
+    end  
+
+    my.feed 1
+    hook.should == 1
+    my.feed 2
+    hook.should == 2
+  end
+
+
+  example 'return [] if value.nil?' do
+    pending
+  end  
 
 end
