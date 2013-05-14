@@ -19,61 +19,49 @@ alias DefDSL DefDsl
 
 
 module DefDsl
-  def def_dsl *classes
-    classes.any?? def_dsl!(classes) : def_dsl!
-  end
-
-  def def_dsl! classes=shallow(self)
-    classes.each do |klass|
-      klass.def_dsl_shallow # WTF?  #klass
-    end
-    #magic = So
-    #self.send :include, magic #unless self.included_modules.include? magic
-    #p self
-    #classes.each do |klass|
-    #  DefDsl.include_recursively klass, magic
-    #end
-  end
-  def def_dsl_shallow targets = shallow(self); root = self
-    [*targets].each do |x|
-      meth = x.instance_eval { @dsl } || x.name.to_s.underscore(root)
-      root.class_eval do
-        define_method(meth) do |*a,&b|
-          #so [mini,meth],*a,&b
-        end
-      end
-      if root.class == Module
-        root.send :module_function, meth
-        #who.send :module_function, :so
-        #who.send :module_function, :so1
-        #who.send :module_function, :so2
-      end      
-    end
-  end
-
-  def shallow who
-    if who.class == Module;   who.constants
-    elsif who.class == Class; who.constants - who.superclass.constants
+  # @param given [Class, Module]
+  # @return [Array<Class, Module>] that explicitly defined in given
+  def shallow given
+    if given.class == Module;   given.constants
+    elsif given.class == Class; given.constants - given.superclass.constants
     else []
-    end.map { |x| who.const_get x }
+    end.map { |x| given.const_get x }
   end
+  module_function :shallow # explicit_const or other name?
 
+  # @param klass
+  # @param trash [Class, Module, Array<Class, Module>]
+  #   optional black list of entities to visit and return
+  # @return [Array<Class, Module>]
   def all_modules klass, trash = []
+    trash = [*trash]
     trash += [klass]
     children = shallow(klass)
     all = [klass, (children-trash).
-           map { |x| all_modules x, trash + children + [klass] }].
+           map { |x| all_modules x, trash + children }].
            flatten.select { |x| Module === x }
     all
   end
+  module_function :all_modules
 
-  def include_recursively target, mod, &block
-    all_modules(target).each do |x|
-      x.send :include, mod
-      x.instance_eval &block if block
-    end
+  # implicit way to use instance_eval, by passing block with zero arity
+  # @param block [Proc]
+  # @return [Proc]
+  def arity_based &block
+    block.arity == 0 ? proc { |obj| obj.instance_eval &block }
+                     : block
   end
-  module_function :include_recursively, :all_modules, :shallow
+  module_function :arity_based
+
+  # traverse tree of classes and modules, acts {arity_based}
+  #
+  # @param target [Class, Module] root of search tree
+  # @param trash [Array<Class, Module>] black list of entities to visit and yield
+  # @yield [Class, Module] in context of each found, once per entity
+  def traverse target, trash = [], &block
+    all_modules(target, trash).each &DefDsl.arity_based(&block)
+  end
+  module_function :traverse
 
   include MetaModule
   class DSL < MModule
@@ -84,6 +72,20 @@ module DefDsl
     end
   end
   Dsl = DSL
+
+
+
+  #
+  #
+  #
+  #
+  #######################################################
+  #
+  #
+  #
+  #
+
+
 
   #def def_dsl *const
   #  const.each do |const|
@@ -185,3 +187,44 @@ class String
          downcase
   end
 end
+__END__
+  #def def_dsl *classes
+  #  classes.any?? def_dsl!(classes) : def_dsl!
+  #end
+  #def def_dsl #*classes #=shallow(self)
+  #  classes
+  #  classes.each do |klass|
+  #    klass.def_dsl_shallow # WTF?  #klass
+  #  end
+  #  #magic = So
+  #  #self.send :include, magic #unless self.included_modules.include? magic
+  #  #p self
+  #  #classes.each do |klass|
+  #  #  DefDsl.include_recursively klass, magic
+  #  #end
+  #end
+  #def def_dsl_shallow targets = shallow(self); root = self
+  #  [*targets].each do |x|
+  #    meth = x.instance_eval { @dsl } || x.name.to_s.underscore(root)
+  #    root.class_eval do
+  #      define_method(meth) do |*a,&b|
+  #        #so [mini,meth],*a,&b
+  #      end
+  #    end
+  #    if root.class == Module
+  #      root.send :module_function, meth
+  #      #who.send :module_function, :so
+  #      #who.send :module_function, :so1
+  #      #who.send :module_function, :so2
+  #    end      
+  #  end
+  #end
+
+  ####def include_recursively target, mod, &block
+  ####  all_modules(target).each do |x|
+  ####    x.send :include, mod
+  ####    x.instance_eval &block if block
+  ####  end
+  ####end
+  ####module_function :include_recursively
+  ####module_function :all_modules, :shallow
