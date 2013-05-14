@@ -1,4 +1,4 @@
-describe [DefDsl,DefDSL].join' or ' do
+describe 'DefDsl or DefDSL' do
   after { remove_const :My if defined? My }
 
   example 'usage inside module' do
@@ -11,7 +11,7 @@ describe [DefDsl,DefDSL].join' or ' do
       end
 
       extend DefDSL
-      def_dsl Dir, File
+      def_dsl #Dir, File
 
       file 'root.txt'
       dir 'dir' do
@@ -42,7 +42,7 @@ describe [DefDsl,DefDSL].join' or ' do
       end
 
       extend DefDSL
-      def_dsl Dir, File
+      def_dsl #Dir, File
 
       def initialize
         file 'root.txt'
@@ -77,7 +77,7 @@ describe [DefDsl,DefDSL].join' or ' do
       end
 
       extend DefDSL
-      def_dsl ADir, AFile
+      def_dsl #ADir, AFile
 
       file 'root.txt'
       dir 'dir' do
@@ -112,7 +112,7 @@ describe [DefDsl,DefDSL].join' or ' do
       end
 
       extend DefDSL
-      def_dsl Dir, File
+      def_dsl #Dir, File
 
       file 'root.txt' do
         this.block.should_be just stored.in_ivar
@@ -147,7 +147,7 @@ describe [DefDsl,DefDSL].join' or ' do
       end
 
       extend DefDSL
-      def_dsl Dir, File
+      def_dsl #Dir, File
 
       def initialize &block
         @block = block
@@ -195,46 +195,44 @@ describe [DefDsl,DefDSL].join' or ' do
     pending
   end  
 
-  example 'declarative way to remember block + meta module' do
+
+  example 'easy dsl' do
     module My
+      class A; end
 
+      extend DefDsl!
 
-      #class File < Struct.new :name; end
-      class Dir < Struct.new :name
-        #Dir = Dir
-        #File = File
-      end
-
-      extend DefDSL
-      def_dsl Dir #, File
-
-      #file 'root.txt'
-      dir 'dir' do
-        #dir 'inner' do
-        #  dir 'empty'
-        #  file 'any'
-        #end
-      end
-
-      so.should == {file: so1(:file), dir: so1(:dir)}
-
-
-
-
-
-
-
-      #class Blocky < Struct.new :shit
-      #end
-
-      #extend DefDsl #(Block)
-      #def_dsl Blocky
-
-      #blocky do
-      #  @a = 123
-      #end
-      #expect { my.so1(:block).call! }.to change { my.so1(:block).instance_eval{@a} }.from(nil).to(123)
-
+      a
+      so.should == {a: so1(:a)}
     end
   end
+
+  #example 'declarative way to remember block + meta module' do
+  #  module My
+  #    #class File < Struct.new :name; end
+  #    class Dir < Struct.new :name
+  #      #Dir = Dir
+  #      #File = File
+  #    end
+  #    extend DefDSL
+  #    def_dsl #File # black list
+  #    #file 'root.txt'
+  #    dir 'dir' do
+  #      #dir 'inner' do
+  #      #  dir 'empty'
+  #      #  file 'any'
+  #      #end
+  #    end
+  #    #so.should == {file: so1(:file), dir: so1(:dir)}
+  #    #class Blocky < Struct.new :shit
+  #    #end
+  #    #extend DefDsl #(Block)
+  #    #def_dsl Blocky
+  #    #blocky do
+  #    #  @a = 123
+  #    #end
+  #    #expect { my.so1(:block).call! }.to change { my.so1(:block).instance_eval{@a} }.from(nil).to(123)
+
+  #  end
+  #end
 end

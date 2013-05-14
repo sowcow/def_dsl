@@ -1,6 +1,29 @@
-describe DefDsl,:focus do
+describe DefDsl do
   #subject { DefDsl }
   after { remove_const :My if defined? My }
+
+  describe '.shallow' do
+    it '<:*works*:>' do
+      module My
+        X = Class.new
+        class ASuper
+          B = Class.new
+          C = Class.new
+        end
+        class Super < ASuper
+          A = Class.new
+          Y = Class.new
+        end
+        class B < Super
+          A = Class.new
+          B = Class.new
+          C = Class.new
+        end
+      end
+
+      DefDsl.shallow(My::B).should == [My::B::A, My::B::B, My::B::C]
+    end
+  end
 
   # todo find a better place for helpers
   describe '.arity_based' do
@@ -16,8 +39,60 @@ describe DefDsl,:focus do
   
 
   describe '#def_dsl' do
-    it 'traverse self, includes So; So.included does other work?'
-    it 'takes optional black list'
+    #it 'traverse self, includes So; So.included does other work?'
+    #it 'define dsl for each AMBIGUOUS?
+    #it 'takes optional black list'
+    it 'includes So... in self and each who is_a module' do
+      module My
+        @magic = DefDsl::So # name...
+
+        class A; end; class B; end
+        class C
+          module E
+            class D; end
+          end
+        end
+
+        extend DefDsl
+      
+        [My,A,B,C,C::E,C::E::D].map { |x| x.include? @magic }.should == [false]*6
+        def_dsl
+        [My,A,B,C,C::E,C::E::D].map { |x| x.include? @magic }.should == [true]*6
+
+        #extend RSpec::Matchers ### redefines method `include`...
+        #RSpec::Matchers.expect { def_dsl }.to RSpec::Matchers.change {
+        #  [My, A, B, C, C::E, C::E::D].map { |x| x.include? @magic }
+        #}.from([false]*6).to([true]*6)
+      end
+    end
+    it 'defines dsl methods for classes inside module' do
+      module My
+        class A; end
+        class B
+          class C; end
+        end
+
+        extend DefDsl
+        def_dsl
+        extend RSpec::Matchers
+        expect { a;b;B.new.c }.not_to raise_error
+      end
+    end
+    it 'defines dsl methods for classes inside class' do
+      class My
+        class A < Struct.new :any; end
+        class B
+          class C; end
+        end
+
+        extend DefDsl
+        def_dsl
+        self
+      end.new.instance_eval do
+        extend RSpec::Matchers
+        expect { a;b;My::B.new.c }.not_to raise_error
+      end
+    end
   end
 
   describe '.traverse' do
