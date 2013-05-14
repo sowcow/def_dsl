@@ -195,4 +195,46 @@ describe [DefDsl,DefDSL].join' or ' do
     pending
   end  
 
+  example 'declarative way to remember block + meta module' do
+    module My
+
+
+      #class File < Struct.new :name; end
+      class Dir < Struct.new :name
+        #Dir = Dir
+        #File = File
+      end
+
+      extend DefDSL
+      def_dsl Dir #, File
+
+      #file 'root.txt'
+      dir 'dir' do
+        #dir 'inner' do
+        #  dir 'empty'
+        #  file 'any'
+        #end
+      end
+
+      so.should == {file: so1(:file), dir: so1(:dir)}
+
+
+
+
+
+
+
+      #class Blocky < Struct.new :shit
+      #end
+
+      #extend DefDsl #(Block)
+      #def_dsl Blocky
+
+      #blocky do
+      #  @a = 123
+      #end
+      #expect { my.so1(:block).call! }.to change { my.so1(:block).instance_eval{@a} }.from(nil).to(123)
+
+    end
+  end
 end
