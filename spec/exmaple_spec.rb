@@ -10,8 +10,7 @@ describe 'DefDsl or DefDSL' do
         File = File
       end
 
-      extend DefDSL
-      def_dsl #Dir, File
+      extend DefDSL! # accepts optional black list of classes
 
       file 'root.txt'
       dir 'dir' do
@@ -42,7 +41,7 @@ describe 'DefDsl or DefDSL' do
       end
 
       extend DefDSL
-      def_dsl #Dir, File
+      def_dsl # accepts optional black list of classes
 
       def initialize
         file 'root.txt'
@@ -137,7 +136,7 @@ describe 'DefDsl or DefDSL' do
   end
 
 
-  example 'lazy evaluation' do
+  example 'lazy evaluation' do # useless
     pending
     class My
       class File < Struct.new :name; end
@@ -198,41 +197,38 @@ describe 'DefDsl or DefDSL' do
 
   example 'easy dsl' do
     module My
-      class A; end
+      class Use123; end
 
       extend DefDsl!
-
-      a
-      so.should == {a: so1(:a)}
+      use123
+      so.should == {use123: so1(:use123)}
     end
   end
 
-  #example 'declarative way to remember block + meta module' do
-  #  module My
-  #    #class File < Struct.new :name; end
-  #    class Dir < Struct.new :name
-  #      #Dir = Dir
-  #      #File = File
-  #    end
-  #    extend DefDSL
-  #    def_dsl #File # black list
-  #    #file 'root.txt'
-  #    dir 'dir' do
-  #      #dir 'inner' do
-  #      #  dir 'empty'
-  #      #  file 'any'
-  #      #end
-  #    end
-  #    #so.should == {file: so1(:file), dir: so1(:dir)}
-  #    #class Blocky < Struct.new :shit
-  #    #end
-  #    #extend DefDsl #(Block)
-  #    #def_dsl Blocky
-  #    #blocky do
-  #    #  @a = 123
-  #    #end
-  #    #expect { my.so1(:block).call! }.to change { my.so1(:block).instance_eval{@a} }.from(nil).to(123)
+  example 'declarative way to remember block' do
+    module My
+      class Blocky
+        @lazy = true # should remember block to be used in other context
+      end            # lazy is too short to ignore
+      extend DefDSL!
 
-  #  end
-  #end
+      blocky do |x|
+        @a = (@a || 0) + 1
+      end
+
+      context = Object.new
+      so1(:blocky).call!(context)
+      context.instance_eval { @a }.should == 1
+
+      #so.should == {file: so1(:file), dir: so1(:dir)}
+      #class Blocky < Struct.new :shit
+      #end
+      #extend DefDsl #(Block)
+      #def_dsl Blocky
+      #blocky do
+      #  @a = 123
+      #end
+      #expect { my.so1(:block).call! }.to change { my.so1(:block).instance_eval{@a} }.from(nil).to(123)
+    end
+  end
 end

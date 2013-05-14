@@ -28,10 +28,17 @@ alias DefDSL! DefDsl!
 
 module DefDsl
 
+  module Lazy
+    def feed_block &b; @block_ = b end
+    def block!; @block_ end
+    def call! ctx; ctx.instance_eval &block! end
+  end
+
   # todo: test so, trash(?)
   def def_dsl trash = []
     DefDsl.traverse self, trash do |who|
       who.send :include, So
+      who.send :include, Lazy if who.instance_eval { @lazy }
 
       DefDsl.shallow(who, trash).each do |mod|
         mini = mod.name.underscore # .....
